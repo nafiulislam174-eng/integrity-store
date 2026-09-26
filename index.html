@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="bn" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrity Store | প্রিমিয়াম অনলাইন শপিং</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0fdf4',100:'#dcfce7',500:'#10b981',600:'#059669',700:'#047857',900:'#064e3b' },
+            accent: { 500:'#f59e0b',600:'#d97706',700:'#b45309' },
+            slateDark:'#0f172a',
+            cardDark:'#1e293b'
+          },
+          fontFamily: {
+            sans: ['Inter','Hind Siliguri','sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  import {
+    getDatabase,
+    ref,
+    set,
+    update,
+    remove,
+    onValue,
+    get
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyAVFRm0RcdNBX2D3G58_D12wi8B8g9y7wQ",
+  authDomain: "integrity-store.firebaseapp.com",
+  databaseURL: "https://integrity-store-default-rtdb.firebaseio.com",
+  projectId: "integrity-store",
+  storageBucket: "integrity-store.firebasestorage.app",
+  messagingSenderId: "1063922487508",
+  appId: "1:1063922487508:web:214db1c0109ea2780bab41"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+
+  /*
+   * তোমার নিচের storeApp() function থেকে Firebase ব্যবহার করার জন্য
+   * প্রয়োজনীয় function-গুলো window-তে রাখা হয়েছে।
+   */
+  window.firebaseDb = db;
+  window.firebaseAuth = auth;
+
+  window.dbRef = ref;
+  window.dbSet = set;
+  window.dbUpdate = update;
+  window.dbRemove = remove;
+  window.dbOnValue = onValue;
+  window.dbGet = get;
+
+  window.firebaseCreateUser = createUserWithEmailAndPassword;
+  window.firebaseLogin = signInWithEmailAndPassword;
+  window.firebaseLogout = signOut;
+  window.firebaseUpdateProfile = updateProfile;
+
+  /*
+   * তোমার storeApp() function-এর ভিতরে bare
+   * onAuthStateChanged(...) ব্যবহার করা হয়েছে।
+   * তাই এটি window-তে রাখতে হবে।
+   */
+  window.firebaseOnAuthStateChanged = onAuthStateChanged;
+
+  window.firebaseReady = true;
+
+  console.log("Firebase connected successfully.");
+</script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    body { font-family: 'Hind Siliguri', 'Inter', sans-serif; }
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+    ::-webkit-scrollbar-thumb { background: #10b981; border-radius:4px; }
+
+    .glassmorphism {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .dark .glassmorphism {
+      background: rgba(15,23,42,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .animate-pulse-fast { animation: pulse 1.2s cubic-bezier(0.4,0,0.6,1) infinite; }
+    @media print {
+      body * { visibility:hidden; }
+      #printable-invoice, #printable-invoice * { visibility:visible; }
+      #printable-invoice { position:absolute; left:0; top:0; width:100%; }
+    }
+  </style>
+</head>
+
+<body x-data="storeApp()" :class="{ 'dark': darkMode, 'bg-slate-900 text-slate-100': darkMode, 'bg-slate-50 text-slate-800': !darkMode }" class="min-h-screen transition-colors duration-300 flex flex-col justify-between">
+
+  <!-- Top Notification / Announcement Bar -->
+  <div class="bg-gradient-to-r from-brand-700 via-brand-600 to-accent-600 text-white text-xs md:text-sm py-2 px-4 text-center font-medium flex justify-between items-center shadow-sm">
+    <div class="hidden md:flex items-center space-x-3">
+      <span><i class="fa-solid fa-phone me-1"></i> +880 1602-903024</span>
+      <span><i class="fa-solid fa-envelope me-1"></i> support@integritystore.com</span>
+    </div>
+    <div class="mx-auto md:mx-0 flex items-center space-x-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-300 animate-ping"></span>
+      <span x-text="lang === 'bn' ? '🎉 ফ্রি ডেলিভারি! ১০০০৳ এর বেশি কেনাকাটায় কোড: FREE1000' : '🎉 Free Delivery on orders over 1000৳! Code: FREE1000'"></span>
+    </div>
+    <div class="flex items-center space-x-3 text-xs">
+      <button @click="toggleLanguage()" class="hover:underline font-bold px-1 py-0.5 rounded bg-white/20">
+        <span x-text="lang === 'bn' ? 'English' : 'বাংলা'"></span>
+      </button>
+      <button @click="toggleDarkMode()" class="p-1 rounded-full hover:bg-white/20 transition">
+        <i x-show="!darkMode" class="fa-solid fa-moon"></i>
+        <i x-show="darkMode" class="fa-solid fa-sun text-amber-300"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <header class="sticky top-0 z-40 glassmorphism shadow-md transition-all duration-300 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-4">
+        <a href="#" @click.prevent="currentView = 'shop'" class="flex items-center space-x-2 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-500 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-brand-500/30 group-hover:scale-105 transition transform">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent">Integrity</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 -mt-1">Store BD</span>
+          </div>
+        </a>
+
+        <div class="hidden lg:flex items-center bg-slate-200/60 dark:bg-slate-800 p-1 rounded-full text-xs font-semibold">
+          <button @click="currentView = 'shop'" :class="currentView === 'shop' ? 'bg-brand-600 text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'" class="px-3 py-1 rounded-full transition">
+            <i class="fa-solid fa-store me-1"></i> <span x-text="lang === 'bn' ? 'শপ' : 'Shop'"></span>
+          </button>
+          <button @click="currentView = 'vendor'" :class="currentView === 'vendor' ? 'bg-brand-600 text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'" class="px-3 py-1 rounded-full transition">
+            <i class="fa-solid fa-shop me-1"></i> <span x-text="lang === 'bn' ? 'ভেন্ডর পোর্টাল' : 'Vendor Portal'"></span>
+          </button>
+          <button x-show="currentUser && currentUser.isAdmin" @click="currentView = 'admin'" :class="currentView === 'admin' ? 'bg-amber-600 text-white shadow' : 'text-amber-600 hover:text-amber-500'" class="px-3 py-1 rounded-full transition font-bold">
+            <i class="fa-solid fa-user-shield me-1"></i> <span x-text="lang === 'bn' ? 'এডমিন প্যানেল' : 'Admin Panel'"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 max-w-xl relative hidden md:block" x-data="{ openSuggest: false }">
+        <div class="relative flex items-center">
+          <input type="text" x-model="searchQuery" @focus="openSuggest = true" @click.away="openSuggest = false" :placeholder="lang === 'bn' ? 'পণ্য, ব্র্যান্ড বা ক্যাটাগরি খুঁজুন...' : 'Search for products, brands or categories...'" class="w-full pl-4 pr-10 py-2.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm shadow-inner transition" />
+          <button @click="triggerSearch()" class="absolute right-3 text-brand-600 hover:text-brand-700">
+            <i class="fa-solid fa-magnifying-glass text-lg"></i>
+          </button>
+        </div>
+
+        <div x-show="openSuggest && searchQuery.length > 0" x-transition class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+          <div class="p-3">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2" x-text="lang === 'bn' ? 'পরামর্শসমূহ' : 'Suggestions'"></p>
+            <template x-for="item in filteredProducts.slice(0, 4)" :key="item.id">
+              <div @click="openProductModal(item); openSuggest = false;" class="flex items-center gap-3 p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition">
+                <img :src="item.image" :alt="item.name" class="w-10 h-10 object-cover rounded-lg">
+                <div class="flex-1">
+                  <h4 class="text-sm font-medium line-clamp-1" x-text="item.name"></h4>
+                  <p class="text-xs font-bold text-brand-600" x-text="formatCurrency(item.price)"></p>
+                </div>
+              </div>
+            </template>
+            <div x-show="filteredProducts.length === 0" class="p-4 text-center text-sm text-slate-500" x-text="lang === 'bn' ? 'কোনো পণ্য পাওয়া যায়নি' : 'No products found'"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <button @click="handleAccountClick()" class="flex items-center space-x-2 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 transition">
+          <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-200">
+            <i :class="currentUser && currentUser.isAdmin ? 'fa-solid fa-user-gear text-amber-500' : 'fa-solid fa-user'"></i>
+          </div>
+          <div class="hidden sm:flex flex-col text-left">
+            <span class="text-xs text-slate-500 dark:text-slate-400" x-text="currentUser ? (currentUser.isAdmin ? (lang==='bn'?'এডমিন':'Admin') : (lang==='bn'?'স্বাগতম':'Welcome')) : (lang==='bn'?'রেজিস্ট্রেশন/লগইন':'Register/Login')"></span>
+            <span class="text-xs font-bold truncate max-w-[90px]" x-text="currentUser ? currentUser.name : (lang==='bn'?'আমার একাউন্ট':'My Account')"></span>
+          </div>
+        </button>
+
+        <button @click="currentView = 'wishlist'" class="relative p-2 text-slate-700 dark:text-slate-200 hover:text-brand-600 transition">
+          <i class="fa-regular fa-heart text-xl"></i>
+          <span x-show="wishlist.length > 0" x-text="wishlist.length" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow"></span>
+        </button>
+
+        <button @click="cartOpen = true" class="relative bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white px-3.5 py-2 rounded-xl flex items-center space-x-2 shadow-md shadow-brand-500/20 hover:scale-105 transition transform">
+          <i class="fa-solid fa-cart-shopping text-base"></i>
+          <span class="hidden sm:inline text-xs font-bold" x-text="formatCurrency(cartSubtotal)"></span>
+          <span class="bg-white text-brand-700 text-xs font-black px-1.5 py-0.5 rounded-md" x-text="cartCount"></span>
+        </button>
+      </div>
+
+    </div>
+
+    <div class="md:hidden px-4 pb-3">
+      <div class="relative flex items-center">
+        <input type="text" x-model="searchQuery" :placeholder="lang === 'bn' ? 'পণ্য খুঁজুন...' : 'Search products...'" class="w-full pl-4 pr-10 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        <button @click="triggerSearch()" class="absolute right-3 text-brand-600">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Category Navigation Bar -->
+  <nav class="bg-white dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center space-x-6 overflow-x-auto py-2.5 no-scrollbar">
+      <button @click="selectedCategory = 'all'" :class="selectedCategory === 'all' ? 'text-brand-600 dark:text-brand-400 font-bold border-b-2 border-brand-600 pb-1' : 'text-slate-600 dark:text-slate-300 hover:text-brand-600'" class="whitespace-nowrap transition flex items-center space-x-1">
+        <i class="fa-solid fa-border-all text-xs"></i>
+        <span x-text="lang === 'bn' ? 'সব ক্যাটাগরি' : 'All Categories'"></span>
+      </button>
+
+      <template x-for="cat in categories" :key="cat.id">
+        <button @click="selectedCategory = cat.id" :class="selectedCategory === cat.id ? 'text-brand-600 dark:text-brand-400 font-bold border-b-2 border-brand-600 pb-1' : 'text-slate-600 dark:text-slate-300 hover:text-brand-600'" class="whitespace-nowrap transition flex items-center space-x-1.5">
+          <i :class="cat.icon" class="text-xs"></i>
+          <span x-text="lang === 'bn' ? cat.nameBn : cat.nameEn"></span>
+        </button>
+      </template>
+    </div>
+  </nav>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Shop -->
+    <div x-show="currentView === 'shop'">
+      <div class="relative rounded-3xl overflow-hidden shadow-2xl mb-8 bg-slate-900 min-h-[220px] sm:min-h-[320px] md:min-h-[380px] flex items-center">
+        <template x-for="(slide, index) in heroSlides" :key="index">
+          <div x-show="activeSlide === index" x-transition.opacity.duration.700ms class="absolute inset-0 bg-cover bg-center" :style="`background-image: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.3)), url('${slide.image}')`"></div>
+        </template>
+
+        <div class="relative z-10 p-6 sm:p-12 max-w-2xl text-white">
+          <span class="inline-block px-3 py-1 bg-amber-500 text-slate-900 font-extrabold text-xs rounded-full uppercase tracking-wider mb-3 shadow" x-text="heroSlides[activeSlide].badge"></span>
+          <h1 class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight mb-3" x-text="heroSlides[activeSlide].title"></h1>
+          <p class="text-xs sm:text-base text-slate-200 mb-6 line-clamp-2" x-text="heroSlides[activeSlide].subtitle"></p>
+
+          <div class="flex items-center space-x-4">
+            <button @click="selectedCategory = 'fashion'" class="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:scale-105 transition transform flex items-center space-x-2">
+              <span x-text="lang === 'bn' ? 'এখনই কিনুন' : 'Shop Now'"></span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+            <div class="hidden sm:flex items-center space-x-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-semibold">
+              <i class="fa-solid fa-truck-fast text-amber-400"></i>
+              <span x-text="lang === 'bn' ? '২৪-৪৮ ঘণ্টায় ডেলিভারি' : '24-48h Fast Delivery'"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="absolute bottom-4 right-6 z-20 flex space-x-2">
+          <template x-for="(slide, index) in heroSlides" :key="index">
+            <button @click="activeSlide = index" :class="activeSlide === index ? 'w-8 bg-brand-500' : 'w-2 bg-white/50'" class="h-2 rounded-full transition-all duration-300"></button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Flash Sale -->
+      <section class="mb-10 bg-gradient-to-r from-rose-900/10 via-amber-900/10 to-brand-900/10 dark:from-slate-800 dark:to-slate-800 p-6 rounded-3xl border border-rose-200 dark:border-slate-700 relative overflow-hidden shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl shadow-md animate-bounce">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400" x-text="lang === 'bn' ? 'ফ্ল্যাশ সেল - ধামাকা অফার!' : 'Flash Sale - Super Deals!'"></h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400" x-text="lang === 'bn' ? 'সীমিত সময়ের জন্য বিশেষ মূল্যছাড়' : 'Limited time offers with huge discounts'"></p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-700">
+            <span class="text-xs font-bold text-slate-500" x-text="lang === 'bn' ? 'শেষ হতে বাকি:' : 'Ends in:'"></span>
+            <div class="flex items-center space-x-1 font-mono text-sm font-extrabold text-slate-800 dark:text-slate-100">
+              <span class="bg-rose-500 text-white px-2 py-0.5 rounded-lg" x-text="countdown.hours">08</span>:
+              <span class="bg-rose-500 text-white px-2 py-0.5 rounded-lg" x-text="countdown.minutes">42</span>:
+              <span class="bg-rose-500 text-white px-2 py-0.5 rounded-lg" x-text="countdown.seconds">19</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <template x-for="product in products.filter(p => p.isFlash)" :key="product.id">
+            <div class="group bg-white dark:bg-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 flex flex-col justify-between relative">
+              <span class="absolute top-5 left-5 z-10 bg-rose-500 text-white text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-lg shadow" x-text="`-${product.discount}%`"></span>
+              <button @click="toggleWishlist(product)" class="absolute top-5 right-5 z-10 w-8 h-8 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow">
+                <i :class="isInWishlist(product.id) ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart'"></i>
+              </button>
+
+              <div @click="openProductModal(product)" class="cursor-pointer overflow-hidden rounded-xl mb-3 relative group/img">
+                <img :src="product.image" :alt="product.name" class="w-full h-36 sm:h-48 object-cover group-hover/img:scale-110 transition duration-500">
+                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">
+                  <span class="bg-white/90 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-full shadow" x-text="lang === 'bn' ? 'এক নজরে' : 'Quick View'"></span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[10px] font-bold text-brand-600 uppercase tracking-wider" x-text="getCategoryName(product.category)"></span>
+                <h3 @click="openProductModal(product)" class="text-xs sm:text-sm font-semibold line-clamp-2 hover:text-brand-600 cursor-pointer my-1 text-slate-800 dark:text-slate-100" x-text="product.name"></h3>
+
+                <div class="flex items-center space-x-1 text-amber-400 text-xs mb-2">
+                  <i class="fa-solid fa-star"></i>
+                  <span class="font-bold text-slate-700 dark:text-slate-300" x-text="product.rating"></span>
+                  <span class="text-slate-400 text-[10px]" x-text="`(${product.reviewsCount})`"></span>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                <div>
+                  <div class="text-sm sm:text-base font-extrabold text-brand-600 dark:text-brand-400" x-text="formatCurrency(calculateDiscountPrice(product.price, product.discount))"></div>
+                  <div class="text-xs text-slate-400 line-through" x-text="formatCurrency(product.price)"></div>
+                </div>
+                <button @click="addToCart(product)" class="bg-brand-600 hover:bg-brand-700 text-white w-9 h-9 rounded-xl flex items-center justify-center shadow-md hover:scale-105 transition">
+                  <i class="fa-solid fa-cart-plus"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100" x-text="lang === 'bn' ? 'আমাদের কালেকশন' : 'Our Collection'"></h2>
+          <p class="text-xs text-slate-500" x-text="lang === 'bn' ? 'সেরা কোয়ালিটির আসল পণ্য' : 'Top quality authentic products'"></p>
+        </div>
+
+        <div class="flex items-center space-x-3 w-full sm:w-auto">
+          <select x-model="sortBy" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs">
+            <option value="featured" x-text="lang === 'bn' ? 'ডিফল্ট' : 'Default'"></option>
+            <option value="price-low" x-text="lang === 'bn' ? 'কম থেকে বেশি' : 'Low to High'"></option>
+            <option value="price-high" x-text="lang === 'bn' ? 'বেশি থেকে কম' : 'High to Low'"></option>
+            <option value="rating" x-text="lang === 'bn' ? 'সর্বোচ্চ রেটিং' : 'Highest Rating'"></option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 mb-12">
+        <template x-for="product in sortedAndFilteredProducts" :key="product.id">
+          <div class="group bg-white dark:bg-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between relative">
+            <div class="absolute top-5 left-5 z-10 flex flex-col gap-1">
+              <span x-show="product.discount > 0" class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow" x-text="`-${product.discount}%`"></span>
+              <span x-show="product.isNew" class="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow" x-text="lang === 'bn' ? 'নতুন' : 'NEW'"></span>
+            </div>
+
+            <button @click="toggleWishlist(product)" class="absolute top-5 right-5 z-10 w-8 h-8 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-slate-400 hover:text-rose-500 transition shadow">
+              <i :class="isInWishlist(product.id) ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart'"></i>
+            </button>
+
+            <div @click="openProductModal(product)" class="cursor-pointer overflow-hidden rounded-xl mb-3 relative group/img">
+              <img :src="product.image" :alt="product.name" class="w-full h-36 sm:h-48 object-cover group-hover/img:scale-105 transition duration-500">
+              <div class="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">
+                <span class="bg-white/90 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-full shadow" x-text="lang === 'bn' ? 'বিস্তারিত দেখুন' : 'Quick View'"></span>
+              </div>
+            </div>
+
+            <div>
+              <span class="text-[10px] font-bold text-brand-600 uppercase tracking-wider" x-text="getCategoryName(product.category)"></span>
+              <h3 @click="openProductModal(product)" class="text-xs sm:text-sm font-semibold line-clamp-2 hover:text-brand-600 cursor-pointer my-1 text-slate-800 dark:text-slate-100" x-text="product.name"></h3>
+
+              <div class="flex items-center space-x-1 text-amber-400 text-xs mb-2">
+                <i class="fa-solid fa-star"></i>
+                <span class="font-bold text-slate-700 dark:text-slate-300" x-text="product.rating"></span>
+                <span class="text-slate-400 text-[10px]" x-text="`(${product.reviewsCount})`"></span>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+              <div>
+                <div class="text-sm sm:text-base font-extrabold text-brand-600 dark:text-brand-400" x-text="formatCurrency(calculateDiscountPrice(product.price, product.discount))"></div>
+                <div x-show="product.discount > 0" class="text-xs text-slate-400 line-through" x-text="formatCurrency(product.price)"></div>
+              </div>
+              <button @click="addToCart(product)" class="bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md hover:scale-105 transition flex items-center space-x-1">
+                <i class="fa-solid fa-cart-plus"></i>
+                <span class="hidden sm:inline" x-text="lang === 'bn' ? 'কার্টে দিন' : 'Add'"></span>
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Vendor -->
+    <div x-show="currentView === 'vendor'" class="space-y-6">
+      <div class="bg-gradient-to-r from-slate-900 to-brand-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="bg-brand-500/30 text-brand-300 text-xs font-bold px-3 py-1 rounded-full border border-brand-500/40 uppercase" x-text="lang === 'bn' ? 'ভেন্ডর সেন্ট্রাল' : 'Vendor Central'"></span>
+          <h1 class="text-2xl sm:text-3xl font-black mt-2" x-text="lang === 'bn' ? 'সেলার ড্যাশবোর্ড' : 'Seller Dashboard'"></h1>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1" x-text="lang === 'bn' ? 'আপনার সেলস, অর্ডার ও প্রোডাক্ট ম্যানেজ করুন' : 'Manage your sales, orders and product catalog'"></p>
+        </div>
+        <button @click="openAddProductModal = true" class="bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-5 py-2.5 rounded-xl text-sm shadow-lg hover:scale-105 transition flex items-center space-x-2">
+          <i class="fa-solid fa-plus"></i>
+          <span x-text="lang === 'bn' ? 'নতুন প্রোডাক্ট যোগ করুন' : 'Add New Product'"></span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs text-slate-500 font-medium" x-text="lang === 'bn' ? 'মোট বিক্রি' : 'Total Sales'"></span>
+          <h3 class="text-xl sm:text-2xl font-black text-brand-600 mt-1" x-text="formatCurrency(145800)"></h3>
+          <span class="text-[10px] text-emerald-500 font-bold"><i class="fa-solid fa-arrow-up me-1"></i> +12% this week</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs text-slate-500 font-medium" x-text="lang === 'bn' ? 'মোট অর্ডার' : 'Total Orders'"></span>
+          <h3 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 mt-1" x-text="orders.length"></h3>
+          <span class="text-[10px] text-brand-500 font-bold">14 Pending</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs text-slate-500 font-medium" x-text="lang === 'bn' ? 'উইথড্র ব্যালেন্স' : 'Available Balance'"></span>
+          <h3 class="text-xl sm:text-2xl font-black text-amber-500 mt-1" x-text="formatCurrency(38400)"></h3>
+          <button class="text-[10px] bg-amber-500/20 text-amber-600 font-bold px-2 py-0.5 rounded mt-1 hover:underline">Withdraw</button>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <span class="text-xs text-slate-500 font-medium" x-text="lang === 'bn' ? 'স্টক অ্যালার্ট' : 'Low Stock Items'"></span>
+          <h3 class="text-xl sm:text-2xl font-black text-rose-500 mt-1">2</h3>
+          <span class="text-[10px] text-rose-400 font-bold">Action Needed</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100" x-text="lang === 'bn' ? 'আপনার প্রোডাক্টের তালিকা' : 'Your Managed Products'"></h3>
+          <span class="text-xs bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-full font-bold text-slate-600 dark:text-slate-300" x-text="`Total: ${products.length}`"></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-3">Product</th>
+                <th class="p-3">Category</th>
+                <th class="p-3">Price</th>
+                <th class="p-3">Stock</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+              <template x-for="p in products" :key="p.id">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <td class="p-3 flex items-center space-x-3">
+                    <img :src="p.image" class="w-8 h-8 rounded object-cover">
+                    <span class="font-semibold line-clamp-1 max-w-[180px]" x-text="p.name"></span>
+                  </td>
+                  <td class="p-3 uppercase text-[11px] font-bold text-slate-500" x-text="p.category"></td>
+                  <td class="p-3 font-bold text-brand-600" x-text="formatCurrency(p.price)"></td>
+                  <td class="p-3 font-mono font-bold" x-text="p.stock"></td>
+                  <td class="p-3">
+                    <span :class="p.stock > 5 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'" class="px-2 py-0.5 rounded text-[10px] font-extrabold">
+                      <span x-text="p.stock > 5 ? 'In Stock' : 'Low Stock'"></span>
+                    </span>
+                  </td>
+                  <td class="p-3 text-right space-x-2">
+                    <button @click="editProduct(p)" class="text-brand-600 hover:text-brand-700"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button @click="deleteProduct(p.id)" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div x-show="currentView === 'account'" class="space-y-6">
+      <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100" x-text="lang === 'bn' ? 'আমার প্রোফাইল' : 'My Account Profile'"></h2>
+        <div class="flex space-x-2">
+          <button x-show="currentUser && currentUser.isAdmin" @click="currentView = 'admin'" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-md transition">
+            <i class="fa-solid fa-user-shield"></i>
+            <span x-text="lang === 'bn' ? 'এডমিন কন্ট্রোল' : 'Admin Control'"></span>
+          </button>
+          <button @click="currentView = 'shop'" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-md transition">
+            <i class="fa-solid fa-house"></i>
+            <span x-text="lang === 'bn' ? 'হোম পেজে ফিরে যান' : 'Back to Home'"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-brand-500 to-accent-500 text-white flex items-center justify-center text-2xl font-black shadow-lg">
+          <span x-text="currentUser ? currentUser.name.charAt(0) : 'U'"></span>
+        </div>
+        <div class="text-center sm:text-left flex-1">
+          <h2 class="text-xl font-bold flex items-center justify-center sm:justify-start gap-2">
+            <span x-text="currentUser ? currentUser.name : 'Guest User'"></span>
+            <span x-show="currentUser && currentUser.isAdmin" class="bg-amber-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">Admin</span>
+          </h2>
+          <p class="text-xs text-slate-500" x-text="currentUser ? currentUser.email : ''"></p>
+          <p class="text-xs text-slate-500" x-text="currentUser ? ('Phone: ' + currentUser.phone) : ''"></p>
+          <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+            <span class="bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full" x-text="lang ==='bn' ? 'রিওয়ার্ড পয়েন্ট: ২৪০' : 'Reward Points: 240'"></span>
+            <span class="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full" x-text="lang ==='bn' ? 'মেম্বারশিপ: গোল্ড' : 'Tier: Gold'"></span>
+          </div>
+        </div>
+        <button x-show="currentUser" @click="logout()" class="text-xs bg-rose-500/10 hover:bg-rose-500 text-rose-600 hover:text-white font-bold px-4 py-2 rounded-xl transition">
+          <i class="fa-solid fa-right-from-bracket me-1"></i> <span x-text="lang === 'bn' ? 'লগআউট' : 'Logout'"></span>
+        </button>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-slate-100" x-text="lang === 'bn' ? 'আমার অর্ডারসমূহ' : 'My Orders'"></h3>
+
+        <template x-if="userOrders.length === 0">
+          <div class="text-center py-8 text-slate-400">
+            <i class="fa-solid fa-box-open text-4xl mb-2"></i>
+            <p x-text="lang === 'bn' ? 'এখনো কোনো অর্ডার পাওয়া যায়নি' : 'No orders placed yet'"></p>
+          </div>
+        </template>
+
+        <div class="space-y-4">
+          <template x-for="ord in userOrders" :key="ord.id">
+            <div class="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 hover:shadow-md transition">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 dark:border-slate-700 pb-3 mb-3 gap-2">
+                <div>
+                  <span class="text-xs text-slate-400" x-text="lang === 'bn' ? 'অর্ডার আইডি:' : 'Order ID:'"></span>
+                  <span class="font-mono font-bold text-sm text-brand-600" x-text="ord.id"></span>
+                  <span class="text-xs text-slate-400 ms-3" x-text="ord.date"></span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full text-[10px] font-black uppercase" x-text="ord.status"></span>
+                  <button @click="printInvoice(ord)" class="text-xs bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-lg font-semibold hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-print me-1"></i> Invoice
+                  </button>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-1">
+                  <span>Pending</span>
+                  <span>Confirmed</span>
+                  <span>Shipped</span>
+                  <span>Delivered</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-brand-500 h-full rounded-full" :style="`width: ${ord.progress}%`"></div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
+                <div><span class="font-bold">Customer:</span> <span x-text="ord.customer?.name"></span></div>
+                <div><span class="font-bold">Phone:</span> <span x-text="ord.customer?.phone"></span></div>
+                <div class="md:col-span-2"><span class="font-bold">Address:</span> <span x-text="ord.customer?.address"></span></div>
+                <div class="md:col-span-2"><span class="font-bold">Area:</span> <span x-text="ord.location || ord.deliveryArea || 'N/A'"></span> / <span class="font-bold">Landmark:</span> <span x-text="ord.landmark || 'N/A'"></span></div>
+              </div>
+
+              <div class="flex justify-between items-center text-xs mt-4">
+                <span class="text-slate-500" x-text="`${ord.items ? ord.items.length : 0} items`"></span>
+                <span class="font-extrabold text-sm text-brand-600" x-text="formatCurrency(ord.total)"></span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wishlist -->
+    <div x-show="currentView === 'wishlist'" class="space-y-6">
+      <h2 class="text-2xl font-black" x-text="lang === 'bn' ? 'আমার পছন্দের পণ্যসমূহ (উইশলিস্ট)' : 'My Wishlist'"></h2>
+
+      <template x-if="wishlist.length === 0">
+        <div class="text-center py-16 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700">
+          <i class="fa-regular fa-heart text-5xl text-slate-300 mb-3"></i>
+          <p class="text-slate-500 text-sm mb-4" x-text="lang === 'bn' ? 'আপনার উইশলিস্ট খালি!' : 'Your wishlist is currently empty!'"></p>
+          <button @click="currentView = 'shop'" class="bg-brand-600 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow">
+            <span x-text="lang === 'bn' ? 'শপিং শুরু করুন' : 'Explore Products'"></span>
+          </button>
+        </div>
+      </template>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <template x-for="item in wishlist" :key="item.id">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <img :src="item.image" class="w-full h-36 object-cover rounded-xl mb-2">
+            <h4 class="text-xs font-bold line-clamp-1" x-text="item.name"></h4>
+            <span class="text-sm font-extrabold text-brand-600 my-1" x-text="formatCurrency(item.price)"></span>
+            <div class="flex space-x-2 mt-2">
+              <button @click="addToCart(item); removeFromWishlist(item.id)" class="flex-1 bg-brand-600 text-white text-xs py-1.5 rounded-lg font-bold">Cart</button>
+              <button @click="removeFromWishlist(item.id)" class="px-2 bg-rose-100 text-rose-600 rounded-lg"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Admin -->
+    <div x-show="currentView === 'admin' && currentUser && currentUser.isAdmin" class="space-y-6">
+      <div class="bg-gradient-to-r from-amber-600 to-amber-800 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="bg-white/20 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">Super Admin</span>
+          <h1 class="text-2xl sm:text-3xl font-black mt-2" x-text="lang === 'bn' ? 'এডমিন প্যানেল' : 'Admin Panel'"></h1>
+          <p class="text-xs sm:text-sm text-slate-200 mt-1" x-text="lang === 'bn' ? 'পুরো সাইটের প্রোডাক্ট, সমস্ত অর্ডার ও ক্যাটাগরি সম্পূর্ণ কন্ট্রোল করুন' : 'Manage products, orders and site settings'"></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button @click="openAddProductModal = true" class="bg-white text-amber-900 font-extrabold px-5 py-2.5 rounded-xl text-sm shadow-lg hover:bg-slate-100 transition flex items-center space-x-2">
+            <i class="fa-solid fa-plus text-amber-600"></i>
+            <span x-text="lang === 'bn' ? 'নতুন প্রোডাক্ট যোগ করুন' : 'Add New Product'"></span>
+          </button>
+          <button @click="logout()" class="bg-slate-900/20 border border-white/20 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg hover:bg-slate-900/30 transition">
+            <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+          </button>
+        </div>
+      </div>
+
+      <div class="flex space-x-4 border-b border-slate-200 dark:border-slate-700">
+        <button @click="adminTab = 'orders'" :class="adminTab === 'orders' ? 'border-b-2 border-amber-500 text-amber-600 font-bold' : 'text-slate-400'" class="pb-3 text-sm flex items-center space-x-2">
+          <i class="fa-solid fa-boxes-packing"></i>
+          <span x-text="lang === 'bn' ? 'সব অর্ডার ম্যানেজমেন্ট' : 'All Orders Control'"></span>
+          <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold" x-text="orders.length"></span>
+        </button>
+        <button @click="adminTab = 'products'" :class="adminTab === 'products' ? 'border-b-2 border-amber-500 text-amber-600 font-bold' : 'text-slate-400'" class="pb-3 text-sm flex items-center space-x-2">
+          <i class="fa-solid fa-layer-group"></i>
+          <span x-text="lang === 'bn' ? 'প্রোডাক্ট ডিরেক্টরি' : 'All Products Control'"></span>
+          <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold" x-text="products.length"></span>
+        </button>
+      </div>
+
+      <div x-show="adminTab === 'orders'" class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm sm:text-base" x-text="lang === 'bn' ? 'গ্রাহকদের অর্ডার লিস্ট' : 'Customer Orders List'"></h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-3">Order ID / Date</th>
+                <th class="p-3">Customer Details</th>
+                <th class="p-3">Total Amount</th>
+                <th class="p-3">Payment</th>
+                <th class="p-3">Status Control</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+              <template x-for="ord in orders" :key="ord.id">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <td class="p-3">
+                    <span class="font-mono font-bold text-brand-600 block" x-text="ord.id"></span>
+                    <span class="text-[10px] text-slate-400" x-text="ord.date"></span>
+                  </td>
+                  <td class="p-3">
+                    <span class="font-bold block" x-text="ord.customer ? ord.customer.name : 'N/A'"></span>
+                    <span class="text-[11px] text-slate-500 block" x-text="ord.customer ? ord.customer.phone : 'N/A'"></span>
+                    <span class="text-[10px] text-slate-400 block line-clamp-1" x-text="ord.customer ? ord.customer.address : ''"></span>
+                  </td>
+                  <td class="p-3 font-extrabold text-amber-600" x-text="formatCurrency(ord.total)"></td>
+                  <td class="p-3 uppercase text-[10px] font-bold text-slate-500" x-text="ord.paymentMethod || 'COD'"></td>
+                  <td class="p-3">
+                    <select :value="ord.status" @change="updateOrderStatus(ord.id, $event.target.value)" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold px-2 py-1 focus:ring-1 focus:ring-amber-500">
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </td>
+                  <td class="p-3 text-right space-x-2">
+                    <button @click="downloadOrderPNG(ord)" class="text-emerald-600 hover:text-emerald-700 font-bold text-[10px]">Download PNG</button>
+                    <button @click="printInvoice(ord)" class="text-slate-500 hover:text-slate-800"><i class="fa-solid fa-print"></i></button>
+                    <button @click="deleteOrder(ord.id)" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div x-show="adminTab === 'products'" class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm sm:text-base" x-text="lang === 'bn' ? 'সকল প্রোডাক্ট ডিরেক্টরি' : 'All Master Products Catalog'"></h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="p-3">Product</th>
+                <th class="p-3">Category</th>
+                <th class="p-3">Price</th>
+                <th class="p-3">Stock</th>
+                <th class="p-3">Flash Sale</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+              <template x-for="p in products" :key="p.id">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <td class="p-3 flex items-center space-x-3">
+                    <img :src="p.image" class="w-10 h-10 rounded-lg object-cover">
+                    <span class="font-semibold line-clamp-1 max-w-[200px]" x-text="p.name"></span>
+                  </td>
+                  <td class="p-3 uppercase text-[11px] font-bold text-slate-500" x-text="p.category"></td>
+                  <td class="p-3 font-bold text-brand-600" x-text="formatCurrency(p.price)"></td>
+                  <td class="p-3 font-mono font-bold" x-text="p.stock"></td>
+                  <td class="p-3">
+                    <span :class="p.isFlash ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'" class="px-2 py-0.5 rounded text-[10px] font-bold" x-text="p.isFlash ? 'YES' : 'NO'"></span>
+                  </td>
+                  <td class="p-3 text-right space-x-2">
+                    <button @click="editProduct(p)" class="text-brand-600 hover:text-brand-700 font-bold"><i class="fa-solid fa-pen-to-square me-1"></i> Edit</button>
+                    <button @click="deleteProduct(p.id)" class="text-rose-500 hover:text-rose-700 font-bold"><i class="fa-solid fa-trash me-1"></i> Delete</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Add/Edit Product Modal -->
+  <div x-show="openAddProductModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="min-h-screen px-4 flex items-center justify-center">
+      <div @click="openAddProductModal = false" class="fixed inset-0 bg-black/70 backdrop-blur-xs"></div>
+
+      <div class="relative bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl z-10 border border-slate-200 dark:border-slate-800 my-8">
+        <button @click="closeProductModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h2 class="text-xl font-black mb-4 text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+          <i class="fa-solid fa-plus text-brand-600"></i>
+          <span x-text="editingProductId ? (lang === 'bn' ? 'প্রোডাক্ট এডিট করুন' : 'Edit Product') : (lang === 'bn' ? 'নতুন পণ্য যোগ করুন' : 'Add New Product')"></span>
+        </h2>
+
+        <form @submit.prevent="saveProduct()" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">পণ্যের নাম *</label>
+            <input type="text" x-model="newProductForm.name" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">ক্যাটাগরি *</label>
+              <select x-model="newProductForm.category" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+                <option value="fashion">Fashion</option>
+                <option value="electronics">Electronics</option>
+                <option value="groceries">Groceries</option>
+                <option value="beauty">Beauty</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">মূল্য (৳) *</label>
+              <input type="number" x-model.number="newProductForm.price" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">ডিসকাউন্ট (%)</label>
+              <input type="number" x-model.number="newProductForm.discount" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">স্টক পরিমাণ *</label>
+              <input type="number" x-model.number="newProductForm.stock" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">ছবি নির্বাচন (ফোন/কম্পিউটার থেকে) *</label>
+            <input type="file" accept="image/*" @change="handleProductImageUpload" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <div x-show="newProductForm.image" class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2">
+            <img :src="newProductForm.image" class="w-full h-28 object-cover rounded-lg">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">বিবরণ</label>
+            <textarea x-model="newProductForm.description" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-brand-500"></textarea>
+          </div>
+
+          <div class="flex items-center space-x-4 py-1">
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" x-model="newProductForm.isFlash" class="rounded text-brand-600">
+              <span class="font-bold">ফ্ল্যাশ সেল?</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+              <input type="checkbox" x-model="newProductForm.isNew" class="rounded text-brand-600">
+              <span class="font-bold">নতুন কালেকশন?</span>
+            </label>
+          </div>
+
+          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-lg transition text-xs mt-2" x-text="editingProductId ? (lang === 'bn' ? 'আপডেট করুন' : 'Update Product') : (lang === 'bn' ? 'পণ্য সেভ করুন' : 'Save Product')"></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart -->
+  <div x-show="cartOpen" class="fixed inset-0 z-50 overflow-hidden" style="display: none;">
+    <div x-show="cartOpen" x-transition.opacity @click="cartOpen = false" class="absolute inset-0 bg-black/60 backdrop-blur-xs"></div>
+    <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div x-show="cartOpen" x-transition:enter="transform transition ease-in-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transform transition ease-in-out duration-300" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="w-screen max-w-md bg-white dark:bg-slate-900 shadow-2xl flex flex-col">
+        <div class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-bag-shopping text-brand-600 text-xl"></i>
+            <h2 class="text-lg font-bold" x-text="lang === 'bn' ? 'আপনার শপিং ব্যাগ' : 'Shopping Cart'"></h2>
+            <span class="bg-brand-100 dark:bg-brand-900 text-brand-700 dark:text-brand-300 text-xs font-bold px-2 py-0.5 rounded-full" x-text="cartCount"></span>
+          </div>
+          <button @click="cartOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          <template x-if="cart.length === 0">
+            <div class="text-center py-20 text-slate-400">
+              <i class="fa-solid fa-basket-shopping text-5xl mb-3 text-slate-300 dark:text-slate-700"></i>
+              <p class="text-sm font-medium" x-text="lang === 'bn' ? 'আপনার কার্ট এখন খালি!' : 'Your shopping cart is empty!'"></p>
+            </div>
+          </template>
+
+          <template x-for="item in cart" :key="item.id">
+            <div class="flex space-x-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-700/50 relative">
+              <img :src="item.image" :alt="item.name" class="w-20 h-20 object-cover rounded-xl border border-slate-200 dark:border-slate-700">
+              <div class="flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 class="text-xs sm:text-sm font-bold line-clamp-1" x-text="item.name"></h4>
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold" x-text="getCategoryName(item.category)"></span>
+                </div>
+
+                <div class="flex justify-between items-center mt-2">
+                  <span class="text-sm font-extrabold text-brand-600 dark:text-brand-400" x-text="formatCurrency(item.price * item.qty)"></span>
+
+                  <div class="flex items-center space-x-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-0.5">
+                    <button @click="updateQty(item.id, -1)" class="text-slate-500 hover:text-brand-600 font-bold">-</button>
+                    <span class="text-xs font-bold px-1" x-text="item.qty"></span>
+                    <button @click="updateQty(item.id, 1)" class="text-slate-500 hover:text-brand-600 font-bold">+</button>
+                  </div>
+                </div>
+              </div>
+
+              <button @click="removeFromCart(item.id)" class="text-slate-400 hover:text-rose-500 text-xs p-1">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <div x-show="cart.length > 0" class="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+          <div class="flex space-x-2">
+            <input type="text" x-model="couponCode" :placeholder="lang === 'bn' ? 'কুপন কোড (যেমন: FREE1000)' : 'Coupon Code'" class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500 uppercase font-mono">
+            <button @click="applyCoupon()" class="bg-slate-800 dark:bg-slate-700 text-white text-xs font-bold px-4 rounded-xl hover:bg-slate-900 transition" x-text="lang==='bn'?'প্রয়োগ':'Apply'"></button>
+          </div>
+
+          <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+            <div class="flex justify-between">
+              <span x-text="lang === 'bn' ? 'পণ্যের মোট মূল্য:' : 'Subtotal:'"></span>
+              <span class="font-bold" x-text="formatCurrency(cartSubtotal)"></span>
+            </div>
+            <div x-show="appliedDiscount > 0" class="flex justify-between text-emerald-600 font-bold">
+              <span x-text="lang === 'bn' ? 'কুপন ছাড়:' : 'Discount:'"></span>
+              <span x-text="`-${formatCurrency(appliedDiscount)}`"></span>
+            </div>
+            <div class="flex justify-between">
+              <span x-text="lang === 'bn' ? 'ডেলিভারি চার্জ:' : 'Delivery Fee:'"></span>
+              <span class="font-bold" x-text="formatCurrency(deliveryFee)"></span>
+            </div>
+            <div class="flex justify-between text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 pt-2 border-t border-slate-200 dark:border-slate-700">
+              <span x-text="lang === 'bn' ? 'সর্বমোট মূল্য:' : 'Grand Total:'"></span>
+              <span class="text-brand-600 dark:text-brand-400" x-text="formatCurrency(cartGrandTotal)"></span>
+            </div>
+          </div>
+
+          <button @click="cartOpen = false; checkoutOpen = true" class="w-full bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-black py-3 rounded-2xl shadow-lg shadow-brand-500/25 hover:scale-[1.02] transition transform flex items-center justify-center space-x-2">
+            <span x-text="lang === 'bn' ? 'চেকআউট করুন (অর্ডার সম্পন্ন)' : 'Proceed to Checkout'"></span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout -->
+  <div x-show="checkoutOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="min-h-screen px-4 flex items-center justify-center">
+      <div @click="checkoutOpen = false" class="fixed inset-0 bg-black/70 backdrop-blur-xs"></div>
+
+      <div class="relative bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl z-10 border border-slate-200 dark:border-slate-800 my-8">
+        <button @click="checkoutOpen = false" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h2 class="text-2xl font-black mb-6 text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+          <i class="fa-solid fa-credit-card text-brand-600"></i>
+          <span x-text="lang === 'bn' ? 'অর্ডার তথ্য ও পেমেন্ট' : 'Checkout Details'"></span>
+        </h2>
+
+        <form @submit.prevent="placeOrder()" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'নাম *' : 'Full Name *'"></label>
+              <input type="text" x-model="checkoutForm.name" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'মোবাইল নাম্বার *' : 'Phone Number *'"></label>
+              <input type="tel" x-model="checkoutForm.phone" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'বিভাগ *' : 'Division *'"></label>
+              <select x-model="checkoutForm.division" @change="updateDeliveryFee()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+                <option value="Unselect">আপনার বিভাগ সিলেক্ট করুন </option>
+                <option value="dhaka">ঢাকা</option>
+                <option value="chattogram">চট্টগ্রাম</option>
+                <option value="rajshahi">রাজশাহী</option>
+                <option value="khulna">খুলনা</option>
+                <option value="barishal">বরিশাল</option>
+                <option value="sylhet">সিলেট</option>
+                <option value="rangpur">রংপুর</option>
+                <option value="mymensingh">ময়মনসিংহ</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'জেলা *' : 'District *'"></label>
+              <input type="text" x-model="checkoutForm.district" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'থানা *' : 'Thana *'"></label>
+              <input type="text" x-model="checkoutForm.thana" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'এলাকা *' : 'Area *'"></label>
+              <input type="text" x-model="checkoutForm.area" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div x-show="cart.some(item => item.category === 'fashion')" class="mt-2 p-3 rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700">
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'ড্রেসের সাইজ *' : 'Dress Size *'"></label>
+            <select x-model="checkoutForm.size" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+
+          <div class="mt-2 p-4 rounded-2xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-900">
+            <p class="text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-2" x-text="lang === 'bn' ? 'অর্ডারটি কনফার্ম করার জন্য শুধু ডেলিভারি চার্জ পেমেন্ট করুন' : 'To confirm your order, please pay only the delivery charge'"></p>
+
+            <div class="space-y-2">
+              <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400" x-text="lang === 'bn' ? 'পেমেন্টের নাম্বার' : 'Payment Number'"></label>
+              <div class="flex items-center gap-2">
+                <input type="text" value="01602903024" readonly class="flex-1 px-3 py-2 rounded-xl border border-emerald-300 bg-white text-xs font-bold text-slate-700 focus:outline-none">
+                <button type="button" @click="copyPaymentNumber()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-3 py-2 rounded-xl transition">
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'পেমেন্ট পদ্ধতি *' : 'Payment Method *'"></label>
+              <select x-model="checkoutForm.paymentMethod" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+                <option value="" x-text="lang === 'bn' ? 'সিলেক্ট করুন' : 'Select'"></option>
+                <option value="bKash">bKash</option>
+                <option value="Nagad">Nagad</option>
+                <option value="Rocket">Rocket</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'যত টাকা পেমেন্ট করছে *' : 'Amount Paid *'"></label>
+              <input type="number" x-model.number="checkoutForm.paidAmount" min="0" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1" x-text="lang === 'bn' ? 'ট্রানজেকশন আইডি *' : 'Transaction ID *'"></label>
+            <input type="text" x-model="checkoutForm.transactionId" placeholder="TXN123456" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <div class="bg-brand-50 dark:bg-brand-900/30 p-4 rounded-2xl border border-brand-200 dark:border-brand-800">
+            <div class="flex justify-between items-center text-sm font-bold">
+              <span class="text-slate-700 dark:text-slate-300" x-text="lang === 'bn' ? 'ডেলিভারি চার্জ:' : 'Delivery Charge:'"></span>
+              <span class="text-brand-600 dark:text-brand-400" x-text="formatCurrency(deliveryFee)"></span>
+            </div>
+            <div class="flex justify-between items-center text-sm font-bold mt-2">
+              <span class="text-slate-700 dark:text-slate-300" x-text="lang === 'bn' ? 'সর্বমোট প্রদেয় মূল্য:' : 'Total Payable:'"></span>
+              <span class="text-lg font-black text-brand-600 dark:text-brand-400" x-text="formatCurrency(cartGrandTotal)"></span>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-black py-3.5 rounded-2xl shadow-xl transition transform active:scale-95 text-sm" x-text="lang === 'bn' ? 'অর্ডার নিশ্চিত করুন' : 'Confirm & Place Order'"></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Quick View -->
+  <div x-show="productModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="min-h-screen px-4 flex items-center justify-center">
+      <div @click="productModalOpen = false" class="fixed inset-0 bg-black/70 backdrop-blur-xs"></div>
+
+      <template x-if="activeProduct">
+        <div class="relative bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl z-10 border border-slate-200 dark:border-slate-800 my-8">
+          <button @click="productModalOpen = false" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl z-20">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div class="overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
+              <img :src="activeProduct.image" :alt="activeProduct.name" class="w-full h-64 sm:h-80 object-cover">
+            </div>
+
+            <div class="space-y-4">
+              <span class="text-xs font-bold text-brand-600 uppercase tracking-wider" x-text="getCategoryName(activeProduct.category)"></span>
+              <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100" x-text="activeProduct.name"></h2>
+
+              <div class="flex items-center space-x-2 text-sm text-amber-400">
+                <i class="fa-solid fa-star"></i>
+                <span class="font-bold text-slate-700 dark:text-slate-300" x-text="activeProduct.rating"></span>
+                <span class="text-slate-400 text-xs" x-text="`(${activeProduct.reviewsCount} customer reviews)`"></span>
+              </div>
+
+              <div class="flex items-baseline space-x-3">
+                <span class="text-2xl font-black text-brand-600 dark:text-brand-400" x-text="formatCurrency(calculateDiscountPrice(activeProduct.price, activeProduct.discount))"></span>
+                <span x-show="activeProduct.discount > 0" class="text-sm text-slate-400 line-through" x-text="formatCurrency(activeProduct.price)"></span>
+              </div>
+
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed" x-text="activeProduct.description"></p>
+
+              <div class="space-y-1 text-xs text-slate-500">
+                <div><i class="fa-solid fa-check text-brand-500 me-2"></i>100% Authentic Product Guarantee</div>
+                <div><i class="fa-solid fa-truck-fast text-brand-500 me-2"></i>Express Delivery Available</div>
+              </div>
+
+              <div class="pt-4 flex space-x-3">
+                <button @click="addToCart(activeProduct); productModalOpen = false;" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-xs sm:text-sm shadow-lg transition">
+                  <i class="fa-solid fa-cart-plus me-1"></i> <span x-text="lang === 'bn' ? 'কার্টে যোগ করুন' : 'Add to Cart'"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div x-show="showAuthModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+    <div class="min-h-screen px-4 flex items-center justify-center">
+      <div @click="showAuthModal = false" class="fixed inset-0 bg-black/70 backdrop-blur-xs"></div>
+
+      <div class="relative bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl z-10 border border-slate-200 dark:border-slate-800">
+        <button @click="showAuthModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <div class="flex border-b border-slate-200 dark:border-slate-700 mb-4">
+          <button @click="authTab = 'login'" :class="authTab === 'login' ? 'border-b-2 border-brand-600 text-brand-600 font-bold' : 'text-slate-400'" class="flex-1 pb-2 text-center text-sm" x-text="lang === 'bn' ? 'লগইন' : 'Login'"></button>
+          <button @click="authTab = 'register'" :class="authTab === 'register' ? 'border-b-2 border-brand-600 text-brand-600 font-bold' : 'text-slate-400'" class="flex-1 pb-2 text-center text-sm" x-text="lang === 'bn' ? 'রেজিস্ট্রেশন' : 'Register'"></button>
+        </div>
+
+        <div x-show="authTab === 'login'" class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-slate-500" x-text="lang === 'bn' ? 'ফোন নম্বর বা ইমেইল' : 'Phone or Email'"></label>
+            <input type="text" x-model="loginEmail" placeholder="••••••••" class="w-full px-3 py-2 rounded-xl border text-xs bg-transparent dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500" x-text="lang === 'bn' ? 'পাসওয়ার্ড' : 'Password'"></label>
+            <input type="password" x-model="loginPassword" placeholder="••••••••" class="w-full px-3 py-2 rounded-xl border text-xs bg-transparent dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <button @click="loginUser()" class="w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition" x-text="lang === 'bn' ? 'লগইন করুন' : 'Login'"></button>
+        </div>
+
+        <div x-show="authTab === 'register'" class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-slate-500" x-text="lang === 'bn' ? 'আপনার নাম' : 'Full Name'"></label>
+            <input type="text" x-model="regForm.name" placeholder="আপনার নাম লিখুন" class="w-full px-3 py-2 rounded-xl border text-xs bg-transparent dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500" x-text="lang === 'bn' ? 'ইমেইল' : 'Email'"></label>
+            <input type="email" x-model="regForm.emailOrPhone" placeholder="example@email.com" class="w-full px-3 py-2 rounded-xl border text-xs bg-transparent dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500" x-text="lang === 'bn' ? 'পাসওয়ার্ড' : 'Password'"></label>
+            <input type="password" x-model="regForm.password" placeholder="••••••••" class="w-full px-3 py-2 rounded-xl border text-xs bg-transparent dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <button @click="registerUser()" class="w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition" x-text="lang === 'bn' ? 'রেজিস্ট্রেশন সম্পন্ন করুন' : 'Complete Registration'"></button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Live floating chat -->
+  <div x-data="{ chatOpen: false, messages: [{ sender: 'bot', text: 'স্বাগতম! Integrity Store সাপোর্ট সেন্টারে আপনাকে কিভাবে সাহায্য করতে পারি?' }] }" class="fixed bottom-5 right-5 z-40 flex flex-col items-end space-y-3">
+    <a href="https://wa.me/8801602903024?text=Hello%20Integrity%20Store%20Help%20Center" target="_blank" class="w-12 h-12 rounded-full bg-emerald-500 text-white shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition transform group relative">
+      <i class="fa-brands fa-whatsapp"></i>
+      <span class="absolute right-14 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow whitespace-nowrap opacity-0 group-hover:opacity-100 transition">হোয়াটসঅ্যাপ সাপোর্ট (01602903024)</span>
+    </a>
+
+    <button @click="chatOpen = !chatOpen" class="w-13 h-13 rounded-full bg-gradient-to-tr from-brand-600 to-accent-500 text-white shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition transform">
+      <i :class="chatOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-headset'"></i>
+    </button>
+
+    <div x-show="chatOpen" x-transition class="absolute bottom-16 right-0 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-96">
+      <div class="bg-gradient-to-r from-brand-700 to-brand-600 p-4 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-black">AI</div>
+          <div>
+            <h4 class="text-xs font-bold">Store Customer Assistant</h4>
+            <span class="text-[10px] text-emerald-200">Online • Always Active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 p-3 overflow-y-auto space-y-2 text-xs">
+        <template x-for="(msg, idx) in messages" :key="idx">
+          <div :class="msg.sender === 'user' ? 'text-right' : 'text-left'">
+            <span :class="msg.sender === 'user' ? 'bg-brand-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'" class="inline-block px-3 py-2 rounded-2xl max-w-[80%]" x-text="msg.text"></span>
+          </div>
+        </template>
+      </div>
+
+      <div class="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <span class="text-[11px] text-slate-600 dark:text-slate-300 font-medium">সরাসরি হোয়াটসঅ্যাপে মেসেজ দিন:</span>
+        <a href="https://wa.me/8801602903024?text=Hello%20Integrity%20Store" target="_blank" class="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center space-x-1 shadow hover:bg-emerald-700">
+          <i class="fa-brands fa-whatsapp"></i>
+          <span>01602903024</span>
+        </a>
+      </div>
+
+      <div class="p-2 border-t border-slate-200 dark:border-slate-800 flex space-x-2">
+        <input type="text" x-ref="chatInput" @keydown.enter="let val = $refs.chatInput.value; if(val){ messages.push({sender:'user', text:val}); $refs.chatInput.value=''; setTimeout(()=>{ messages.push({sender:'bot', text:'আপনার মেসেজের জন্য ধন্যবাদ। সরাসরি হোয়াটসঅ্যাপে সহায়তার জন্য নিচে দেওয়া বোতামটিতে চাপ দিন।'}); }, 800) }" placeholder="আপনার প্রশ্ন লিখুন..." class="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:outline-none">
+        <button class="bg-brand-600 text-white px-3 rounded-xl text-xs font-bold"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printable invoice -->
+  <div id="printable-invoice" class="hidden p-8 bg-white text-slate-900 font-sans">
+    <template x-if="lastOrder">
+      <div>
+        <div class="flex justify-between items-center border-b pb-4 mb-4">
+          <div>
+            <h1 class="text-2xl font-black text-emerald-600">Integrity Store BD</h1>
+            <p class="text-xs">Invoice #: <span x-text="lastOrder.id"></span></p>
+            <p class="text-xs">Date: <span x-text="lastOrder.date"></span></p>
+          </div>
+          <div class="text-right text-xs">
+            <p class="font-bold">Customer Info:</p>
+            <p x-text="lastOrder.customer ? lastOrder.customer.name : ''"></p>
+            <p x-text="lastOrder.customer ? lastOrder.customer.phone : ''"></p>
+            <p x-text="lastOrder.customer ? lastOrder.customer.address : ''"></p>
+          </div>
+        </div>
+
+        <table class="w-full text-left text-xs mb-6">
+          <thead>
+            <tr class="border-b">
+              <th class="py-2">Item</th>
+              <th class="py-2">Qty</th>
+              <th class="py-2 text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="i in lastOrder.items" :key="i.id">
+              <tr class="border-b">
+                <td class="py-2" x-text="i.name"></td>
+                <td class="py-2" x-text="i.qty"></td>
+                <td class="py-2 text-right" x-text="formatCurrency(i.price * i.qty)"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <div class="text-right text-sm font-bold">
+          <p>Grand Total: <span x-text="formatCurrency(lastOrder.total)"></span></p>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 text-xs py-10 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center space-x-2 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center font-black">I</div>
+          <span class="text-lg font-bold text-white">Integrity Store</span>
+        </div>
+        <p class="text-slate-500 leading-relaxed" x-text="lang === 'bn' ? 'বাংলাদেশের নির্ভরযোগ্য ই-কমার্স প্ল্যাটফর্ম। সততা ও বিশ্বস্ততার সাথে সেরা পণ্য গ্রাহকের দোরগোড়ায়।' : 'Bangladesh\'s trusted e-commerce platform.'"></p>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold mb-3 uppercase tracking-wider" x-text="lang === 'bn' ? 'দ্রুত লিংক' : 'Quick Links'"></h4>
+        <ul class="space-y-2">
+          <li><a href="#" @click.prevent="currentView = 'shop'" class="hover:text-white">Shop Catalog</a></li>
+          <li><a href="#" @click.prevent="currentView = 'vendor'" class="hover:text-white">Vendor Registration</a></li>
+          <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold mb-3 uppercase tracking-wider" x-text="lang === 'bn' ? 'পেমেন্ট পার্টনার' : 'Payment Options'"></h4>
+        <div class="flex space-x-2 text-lg text-slate-300">
+          <i class="fa-solid fa-wallet text-amber-500"></i>
+          <i class="fa-solid fa-credit-card text-brand-400"></i>
+          <i class="fa-solid fa-money-bill-wave text-emerald-400"></i>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-white font-bold mb-3 uppercase tracking-wider">Help Center & Contact</h4>
+        <p>Dhaka, Bangladesh</p>
+        <p class="mt-1 font-semibold text-emerald-400"><i class="fa-brands fa-whatsapp me-1"></i> WhatsApp: 01602903024</p>
+        <p class="mt-1">Email: nafiulislam174@gmail.com</p>
+      </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-6 border-t border-slate-800 text-center text-slate-600">
+      &copy; 2022 Integrity Store BD. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    function storeApp() {
+      return {
+        darkMode: false,
+        lang: 'bn',
+        currentView: 'shop',
+        adminTab: 'orders',
+        searchQuery: '',
+        selectedCategory: 'all',
+        sortBy: 'featured',
+        cartOpen: false,
+        checkoutOpen: false,
+        productModalOpen: false,
+        showAuthModal: false,
+        openAddProductModal: false,
+        editingProductId: null,
+
+        newProductForm: {
+          name: '',
+          category: 'fashion',
+          price: 0,
+          discount: 0,
+          stock: 10,
+          image: '',
+          description: '',
+          isFlash: false,
+          isNew: true
+        },
+
+        currentUser: null,
+        firebaseUser: null,
+        authTab: 'login',
+        regForm: { name: '', emailOrPhone: '', password: '' },
+        loginEmail: '',
+        loginPassword: '',
+        users: [],
+        activeProduct: null,
+
+        cart: [],
+        wishlist: [],
+        couponCode: '',
+        appliedDiscount: 0,
+        deliveryFee: 100,
+
+        checkoutForm: {
+          name: '',
+          phone: '',
+          division: 'Unselect',
+          district: '',
+          thana: '',
+          area: '',
+          address: '',
+          landmark: '',
+          location: '',
+          note: '',
+          paymentMethod: '',
+          paidAmount: 0,
+          transactionId: '',
+          paymentPhone: '01602903024',
+          size: 'S'
+        },
+
+        orders: [],
+        lastOrder: null,
+        activeSlide: 0,
+        firebaseListenersStarted: false,
+publicFirebaseListenersStarted: false,
+syncingCart: false,
+syncingWishlist: false,
+
+        heroSlides: [
+          { badge:'ঈদ স্পেশাল কালেকশন', title:'এক্সক্লুসিভ ফ্যাশন ও ট্রেন্ডি আউটফিট', subtitle:'সর্বোচ্চ ৫০% পর্যন্ত মূল্যছাড় উপভোগ করুন Integrity Store-এ', image:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80' },
+          { badge:'টেক গ্যাজেটস', title:'স্মার্ট ইলেকট্রনিক্স ও এক্সেসরিজ', subtitle:'১০০% অরিজিনাল ওয়ারেন্টিযুক্ত আন্তর্জাতিক ব্রান্ডের গ্যাজেট', image:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80' }
+        ],
+        countdown: { hours:'06', minutes:'34', seconds:'22' },
+
+        categories: [
+          { id:'fashion', nameBn:'ফ্যাশন ও পোশাক', nameEn:'Fashion', icon:'fa-solid fa-shirt' },
+          { id:'electronics', nameBn:'ইলেকট্রনিক্স', nameEn:'Electronics', icon:'fa-solid fa-laptop' },
+          { id:'groceries', nameBn:'গ্রোসারী ও খাবার', nameEn:'Groceries', icon:'fa-solid fa-basket-shopping' },
+          { id:'beauty', nameBn:'বিউটি ও কেয়ার', nameEn:'Beauty', icon:'fa-solid fa-pump-soap' }
+        ],
+
+        products: [
+          {
+            id:'1',
+            name:'পুরুষদের প্রিমিয়াম কটন ফুল স্লিভ শার্ট',
+            category:'fashion',
+            price:1500,
+            discount:20,
+            rating:4.8,
+            reviewsCount:34,
+            stock:12,
+            isFlash:true,
+            isNew:true,
+            image:'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=500&q=80',
+            description:'১০০% সুতি কাপড় দিয়ে তৈরি অত্যন্ত আরামদায়ক ও আকর্ষণীয় ডিজাইনের শার্ট।'
+          },
+          {
+            id:'2',
+            name:'ওয়্যারলেস নয়েজ ক্যানসেলিং হেডফোন',
+            category:'electronics',
+            price:3800,
+            discount:15,
+            rating:4.9,
+            reviewsCount:89,
+            stock:8,
+            isFlash:true,
+            isNew:false,
+            image:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80',
+            description:'হাই-ডেফিনিশন ক্রিস্টাল ক্লিয়ার সাউন্ড এবং ৪০ ঘন্টা ব্যাটারি ব্যাকআপ।'
+          },
+          {
+            id:'3',
+            name:'স্মার্ট ওয়াচ সেভেন ফিটনেস ট্র্যাকার',
+            category:'electronics',
+            price:2400,
+            discount:10,
+            rating:4.6,
+            reviewsCount:19,
+            stock:4,
+            isFlash:false,
+            isNew:true,
+            image:'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80',
+            description:'হার্ট রেট মনিটর, স্পোর্টস মোড এবং ওয়াটারপ্রুফ ডিজাইন।'
+          },
+          {
+            id:'4',
+            name:'প্রিমিয়াম লেদার ওয়ালেট ফর ম্যান',
+            category:'fashion',
+            price:950,
+            discount:0,
+            rating:4.7,
+            reviewsCount:12,
+            stock:25,
+            isFlash:false,
+            isNew:false,
+            image:'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=500&q=80',
+            description:'খাঁটি চামড়ার তৈরি দীর্ঘস্থায়ী ও মার্জিত মানিব্যাগ।'
+          }
+        ],
+
+        init() {
+          this.loadThemeLang();
+
+          const waitForFirebase = setInterval(() => {
+            if (window.firebaseReady && window.firebaseDb && window.firebaseAuth) {
+              clearInterval(waitForFirebase);
+
+              window.firebaseOnAuthStateChanged(window.firebaseAuth, async (user) => {
+                this.firebaseUser = user;
+
+                if (!user) {
+                  this.currentUser = null;
+                  this.cart = [];
+                  this.wishlist = [];
+                  this.orders = [];
+                  return;
+                }
+
+                this.loadCurrentCloudUser(user.uid);
+                this.startFirebaseSync(user.uid);
+              });
+            }
+          }, 100);
+
+          setInterval(() => {
+            let sec = parseInt(this.countdown.seconds) - 1;
+
+            if (sec < 0) {
+              sec = 59;
+
+              let min = parseInt(this.countdown.minutes) - 1;
+
+              if (min < 0) {
+                min = 59;
+
+                let hr = parseInt(this.countdown.hours) - 1;
+                if (hr < 0) hr = 23;
+
+                this.countdown.hours = hr < 10 ? `0${hr}` : `${hr}`;
+              }
+
+              this.countdown.minutes = min < 10 ? `0${min}` : `${min}`;
+            }
+
+            this.countdown.seconds = sec < 10 ? `0${sec}` : `${sec}`;
+          }, 1000);
+
+          setInterval(() => {
+            this.activeSlide = (this.activeSlide + 1) % this.heroSlides.length;
+          }, 5000);
+        },
+
+        loadThemeLang() {
+          const savedTheme = localStorage.getItem('integrity_dark_mode');
+          const savedLang = localStorage.getItem('integrity_lang');
+
+          this.darkMode = savedTheme === 'true';
+          this.lang = savedLang || 'bn';
+        },
+
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          localStorage.setItem('integrity_dark_mode', String(this.darkMode));
+        },
+
+        toggleLanguage() {
+          this.lang = this.lang === 'bn' ? 'en' : 'bn';
+          localStorage.setItem('integrity_lang', this.lang);
+        },
+
+        firebaseErrorMessage(error) {
+          const code = error?.code || '';
+
+          const messages = {
+            'auth/email-already-in-use': 'এই email দিয়ে account আগে থেকেই আছে।',
+            'auth/invalid-email': 'সঠিক email দিন।',
+            'auth/weak-password': 'Password কমপক্ষে ৬ অক্ষরের হতে হবে।',
+            'auth/user-not-found': 'এই email দিয়ে কোনো account পাওয়া যায়নি।',
+            'auth/wrong-password': 'Password সঠিক নয়।',
+            'auth/invalid-credential': 'Email অথবা password সঠিক নয়।',
+            'auth/too-many-requests': 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন।'
+          };
+
+          return messages[code] || 'কাজটি সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।';
+        },
+
+        showAlert(title, text, icon = 'success') {
+          Swal.fire({
+            title,
+            text,
+            icon,
+            confirmButtonColor: '#059669',
+            showClass: { popup:'animate__animated animate__fadeInDown' },
+            hideClass: { popup:'animate__animated animate__fadeOutUp' }
+          });
+        },
+
+        loadCurrentCloudUser(uid) {
+          const userRef = window.dbRef(window.firebaseDb, `users/${uid}`);
+
+          window.dbOnValue(userRef, (snapshot) => {
+            const userData = snapshot.val();
+
+            if (!userData) return;
+
+            this.currentUser = {
+              uid,
+              ...userData
+            };
+
+            this.checkoutForm.name = userData.name || '';
+            this.checkoutForm.phone = userData.phone || '';
+          });
+        },
+
+        startPublicFirebaseSync() {
+  if (this.publicFirebaseListenersStarted) return;
+
+  this.publicFirebaseListenersStarted = true;
+
+  const productsRef = window.dbRef(
+    window.firebaseDb,
+    'products'
+  );
+
+  window.dbOnValue(productsRef, (snapshot) => {
+    const data = snapshot.val() || {};
+
+    const firebaseProducts = Object.entries(data).map(
+      ([id, product]) => ({
+        id,
+        ...product
+      })
+    );
+
+    /*
+     * Firebase-এ product থাকলে
+     * সব device-এ সেই product realtime দেখাবে।
+     */
+    if (firebaseProducts.length > 0) {
+      this.products = firebaseProducts;
+    }
+  });
+},
+
+startFirebaseSync(uid) {
+  if (this.firebaseListenersStarted) return;
+
+  this.firebaseListenersStarted = true;
+
+  const usersRef = window.dbRef(
+    window.firebaseDb,
+    'users'
+  );
+
+  window.dbOnValue(usersRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    this.users = Object.values(data);
+  });
+
+  const cartRef = window.dbRef(
+    window.firebaseDb,
+    `carts/${uid}`
+  );
+
+  window.dbOnValue(cartRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    this.cart = Object.values(data);
+  });
+
+  const wishlistRef = window.dbRef(
+    window.firebaseDb,
+    `wishlists/${uid}`
+  );
+
+  window.dbOnValue(wishlistRef, (snapshot) => {
+    const data = snapshot.val() || {};
+    this.wishlist = Object.values(data);
+  });
+
+  const ordersRef = window.dbRef(
+    window.firebaseDb,
+    'orders'
+  );
+
+  window.dbOnValue(ordersRef, (snapshot) => {
+    const data = snapshot.val() || {};
+
+    const allOrders = Object.entries(data).map(
+      ([id, order]) => ({
+        id,
+        ...order
+      })
+    );
+
+    if (this.currentUser && this.currentUser.isAdmin) {
+      this.orders = allOrders.sort(
+        (a, b) =>
+          (b.createdAt || 0) - (a.createdAt || 0)
+      );
+    } else {
+      this.orders = allOrders
+        .filter(order => order.userId === uid)
+        .sort(
+          (a, b) =>
+            (b.createdAt || 0) - (a.createdAt || 0)
+        );
+    }
+  });
+},
+
+        async syncCartToFirebase() {
+          if (!this.firebaseUser) return;
+
+          const cartData = {};
+          this.cart.forEach(item => {
+            cartData[item.id] = item;
+          });
+
+          await window.dbSet(
+            window.dbRef(window.firebaseDb, `carts/${this.firebaseUser.uid}`),
+            cartData
+          );
+        },
+
+        async syncWishlistToFirebase() {
+          if (!this.firebaseUser) return;
+
+          const wishData = {};
+          this.wishlist.forEach(item => {
+            wishData[item.id] = item;
+          });
+
+          await window.dbSet(
+            window.dbRef(window.firebaseDb, `wishlists/${this.firebaseUser.uid}`),
+            wishData
+          );
+        },
+
+        triggerSearch() {
+          return true;
+        },
+
+        handleAccountClick() {
+          if (this.currentUser) {
+            this.currentView = this.currentUser.isAdmin ? 'admin' : 'account';
+          } else {
+            this.authTab = 'login';
+            this.showAuthModal = true;
+          }
+        },
+
+        async registerUser() {
+          const name = this.regForm.name.trim();
+          const email = this.regForm.emailOrPhone.trim().toLowerCase();
+          const password = this.regForm.password.trim();
+
+          if (!name || !email || !password) {
+            this.showAlert('ভুল তথ্য!', 'নাম, email এবং password দিন।', 'error');
+            return;
+          }
+
+          if (!email.includes('@')) {
+            this.showAlert('Email প্রয়োজন', 'Firebase account তৈরি করতে email ব্যবহার করুন।', 'warning');
+            return;
+          }
+
+          if (password.length < 6) {
+            this.showAlert('দুর্বল password', 'Password কমপক্ষে ৬ অক্ষরের হতে হবে।', 'warning');
+            return;
+          }
+
+          try {
+            const userCredential = await window.firebaseCreateUser(window.firebaseAuth, email, password);
+
+            await window.firebaseUpdateProfile(userCredential.user, { displayName: name });
+
+            const userProfile = {
+              uid: userCredential.user.uid,
+              name,
+              email,
+              phone: '',
+              isAdmin: false,
+              createdAt: Date.now(),
+              updatedAt: Date.now()
+            };
+
+            await window.dbSet(
+              window.dbRef(window.firebaseDb, `users/${userCredential.user.uid}`),
+              userProfile
+            );
+
+            this.regForm = { name: '', emailOrPhone: '', password: '' };
+            this.showAuthModal = false;
+            this.currentView = 'account';
+
+            this.showAlert('রেজিস্ট্রেশন সফল!', `স্বাগতম ${name}!`, 'success');
+          } catch (error) {
+            console.error(error);
+            this.showAlert('রেজিস্ট্রেশন হয়নি', this.firebaseErrorMessage(error), 'error');
+          }
+        },
+
+        async loginUser() {
+          const email = this.loginEmail.trim().toLowerCase();
+          const password = this.loginPassword.trim();
+
+          if (!email || !password) {
+            this.showAlert('ত্রুটি!', 'Email এবং password দিন।', 'error');
+            return;
+          }
+
+          try {
+            await window.firebaseLogin(window.firebaseAuth, email, password);
+            this.loginEmail = '';
+            this.loginPassword = '';
+            this.showAuthModal = false;
+
+            this.showAlert('লগইন সফল!', 'আপনার account সফলভাবে login হয়েছে।', 'success');
+            this.currentView = 'account';
+          } catch (error) {
+            console.error(error);
+            this.showAlert('লগইন হয়নি', this.firebaseErrorMessage(error), 'error');
+          }
+        },
+
+        async logout() {
+          try {
+            await window.firebaseLogout(window.firebaseAuth);
+            this.currentUser = null;
+            this.firebaseUser = null;
+            this.cart = [];
+            this.wishlist = [];
+            this.orders = [];
+            this.currentView = 'shop';
+
+            this.showAlert('লগআউট সফল', 'আপনি সাইট থেকে সফলভাবে লগআউট হয়েছেন।', 'info');
+          } catch (error) {
+            console.error(error);
+          }
+        },
+
+        formatCurrency(amount) {
+          return `${(amount || 0).toLocaleString()} ৳`;
+        },
+
+        calculateDiscountPrice(price, discount) {
+          if (!discount) return price;
+          return Math.round(price - (price * (discount / 100)));
+        },
+
+        getCategoryName(catId) {
+          const cat = this.categories.find(c => c.id === catId);
+          if (!cat) return catId;
+          return this.lang === 'bn' ? cat.nameBn : cat.nameEn;
+        },
+
+        get filteredProducts() {
+          return this.products.filter(p => {
+            const matchesCat = this.selectedCategory === 'all' || p.category === this.selectedCategory;
+            const matchesSearch = p.name ? p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) : false;
+            return matchesCat && matchesSearch;
+          });
+        },
+
+        get sortedAndFilteredProducts() {
+          let list = [...this.filteredProducts];
+          if (this.sortBy === 'price-low') {
+            list.sort((a, b) => this.calculateDiscountPrice(a.price, a.discount) - this.calculateDiscountPrice(b.price, b.discount));
+          } else if (this.sortBy === 'price-high') {
+            list.sort((a, b) => this.calculateDiscountPrice(b.price, b.discount) - this.calculateDiscountPrice(a.price, a.discount));
+          } else if (this.sortBy === 'rating') {
+            list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          }
+          return list;
+        },
+
+        get userOrders() {
+          if (!this.currentUser) return [];
+
+          if (this.currentUser.isAdmin) {
+            return [...this.orders].reverse();
+          }
+
+          return this.orders.filter(order =>
+            (order.userId && order.userId === this.currentUser.uid) ||
+            (order.customer && order.customer.phone === this.currentUser.phone)
+          ).reverse();
+        },
+
+        async addToCart(product) {
+          const finalPrice = this.calculateDiscountPrice(product.price, product.discount);
+          const existing = this.cart.find(item => item.id === product.id);
+
+          if (existing) {
+            existing.qty += 1;
+          } else {
+            this.cart.push({
+              id: product.id,
+              name: product.name,
+              category: product.category,
+              image: product.image,
+              price: finalPrice,
+              qty: 1,
+              size: this.checkoutForm.size || 'M'
+            });
+          }
+
+          await this.syncCartToFirebase();
+
+          this.showAlert('কার্টে যুক্ত হয়েছে!', `${product.name} সফলভাবে শপিং কার্টে যোগ করা হয়েছে।`, 'success');
+        },
+
+        async updateQty(id, delta) {
+          const item = this.cart.find(i => i.id === id);
+
+          if (!item) return;
+
+          item.qty += delta;
+
+          if (item.qty <= 0) {
+            this.cart = this.cart.filter(i => i.id !== id);
+          }
+
+          await this.syncCartToFirebase();
+        },
+
+        async removeFromCart(id) {
+          this.cart = this.cart.filter(i => i.id !== id);
+          await this.syncCartToFirebase();
+        },
+
+        get cartCount() {
+          return this.cart.reduce((sum, i) => sum + i.qty, 0);
+        },
+
+        get cartSubtotal() {
+          return this.cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+        },
+
+        get cartGrandTotal() {
+          const total = this.cartSubtotal - this.appliedDiscount + this.deliveryFee;
+          return total > 0 ? total : 0;
+        },
+
+        applyCoupon() {
+          if (this.couponCode.toUpperCase() === 'FREE1000' && this.cartSubtotal >= 1000) {
+            this.deliveryFee = 0;
+            this.appliedDiscount = 100;
+            this.showAlert('কুপন সফল!', 'কুপন কোড প্রয়োগ করে ডেলিভারি চার্জ সম্পূর্ণ ফ্রি পেলেন!', 'success');
+          } else {
+            this.appliedDiscount = 0;
+            this.showAlert('ভুল কুপন!', 'সঠিক কুপন কোড ব্যবহার করুন অথবা ১০০০৳ এর কেনাকাটা করুন।', 'warning');
+          }
+        },
+
+        updateDeliveryFee() {
+          this.deliveryFee = this.checkoutForm.division === 'dhaka' ? 100 : 120;
+          this.checkoutForm.paidAmount = this.cartGrandTotal;
+          this.checkoutForm.address = `${this.checkoutForm.area || ''}, ${this.checkoutForm.district || ''}, ${this.checkoutForm.division || ''}`;
+        },
+
+        copyPaymentNumber() {
+          const value = '01602903024';
+          navigator.clipboard.writeText(value).then(() => {
+            this.showAlert('কপি হয়েছে!', 'পেমেন্ট নাম্বার কপি করা হয়েছে।', 'success');
+          }).catch(() => {
+            this.showAlert('কপি হয়নি!', 'ম্যানুয়ালি 01602903024 লিখে দিন।', 'warning');
+          });
+        },
+
+        async toggleWishlist(product) {
+          const index = this.wishlist.findIndex(w => w.id === product.id);
+
+          if (index > -1) {
+            this.wishlist.splice(index, 1);
+            this.showAlert('রিমুভ করা হয়েছে', 'পণ্যটি আপনার পছন্দতালিকা থেকে রিমুভ করা হয়েছে।', 'info');
+          } else {
+            this.wishlist.push(product);
+            this.showAlert('পছন্দতালিকায় যুক্ত!', `${product.name} আপনার উইশলিস্টে যুক্ত হয়েছে।`, 'success');
+          }
+
+          await this.syncWishlistToFirebase();
+        },
+
+        isInWishlist(id) {
+          return this.wishlist.some(w => w.id === id);
+        },
+
+        async removeFromWishlist(id) {
+          this.wishlist = this.wishlist.filter(w => w.id !== id);
+          await this.syncWishlistToFirebase();
+        },
+
+        openProductModal(product) {
+          this.activeProduct = product;
+          this.productModalOpen = true;
+        },
+
+        handleProductImageUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.newProductForm.image = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        },
+
+        closeProductModal() {
+          this.openAddProductModal = false;
+          this.editingProductId = null;
+          this.newProductForm = {
+            name: '',
+            category: 'fashion',
+            price: 0,
+            discount: 0,
+            stock: 10,
+            image: '',
+            description: '',
+            isFlash: false,
+            isNew: true
+          };
+        },
+
+        editProduct(product) {
+          this.editingProductId = product.id;
+          this.openAddProductModal = true;
+          this.newProductForm = {
+            name: product.name,
+            category: product.category,
+            price: product.price,
+            discount: product.discount || 0,
+            stock: product.stock || 0,
+            image: product.image || '',
+            description: product.description || '',
+            isFlash: Boolean(product.isFlash),
+            isNew: Boolean(product.isNew)
+          };
+        },
+
+        async saveProduct() {
+          if (!this.currentUser || !this.currentUser.isAdmin) {
+            this.showAlert('অনুমতি নেই', 'শুধু admin product পরিবর্তন করতে পারবেন।', 'error');
+            return;
+          }
+
+          if (!this.newProductForm.name || !this.newProductForm.price || !this.newProductForm.image) {
+            this.showAlert('ভুল তথ্য!', 'অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন।', 'error');
+            return;
+          }
+
+          const productId = this.editingProductId || `PROD-${Date.now()}`;
+
+          const productData = {
+            id: productId,
+            name: this.newProductForm.name.trim(),
+            category: this.newProductForm.category,
+            price: Number(this.newProductForm.price),
+            discount: Number(this.newProductForm.discount || 0),
+            rating: 5.0,
+            reviewsCount: 1,
+            stock: Number(this.newProductForm.stock || 0),
+            isFlash: Boolean(this.newProductForm.isFlash),
+            isNew: Boolean(this.newProductForm.isNew),
+            image: this.newProductForm.image,
+            description: this.newProductForm.description || 'কোয়ালিটি গ্যারান্টি যুক্ত প্রোডাক্ট।',
+            updatedAt: Date.now(),
+            updatedBy: this.firebaseUser.uid
+          };
+
+          await window.dbSet(
+            window.dbRef(window.firebaseDb, `products/${productId}`),
+            productData
+          );
+
+          this.closeProductModal();
+          this.showAlert(this.editingProductId ? 'প্রোডাক্ট আপডেট হয়েছে!' : 'প্রোডাক্ট সেভ হয়েছে!', 'Firebase-এ সফলভাবে সংরক্ষণ করা হয়েছে।', 'success');
+        },
+
+        async deleteProduct(id) {
+          if (!this.currentUser || !this.currentUser.isAdmin) {
+            this.showAlert('অনুমতি নেই', 'শুধু admin product delete করতে পারবেন।', 'error');
+            return;
+          }
+
+          const result = await Swal.fire({
+            title: 'আপনি কি নিশ্চিত?',
+            text: "প্রোডাক্টটি স্থায়ীভাবে মুছে ফেলা হবে!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'হ্যাঁ, ডিলিট করুন!',
+            cancelButtonText: 'না'
+          });
+
+          if (!result.isConfirmed) return;
+
+          await window.dbRemove(window.dbRef(window.firebaseDb, `products/${id}`));
+          this.showAlert('ডিলিট সফল!', 'প্রোডাক্টটি সফলভাবে রিমুভ করা হয়েছে।', 'success');
+        },
+
+        async placeOrder() {
+          if (this.cart.length === 0) {
+            this.showAlert('কার্ট খালি!', 'আপনার শপিং কার্টে কোনো পণ্য নেই।', 'warning');
+            return;
+          }
+
+          if (!this.checkoutForm.name || !this.checkoutForm.phone || !this.checkoutForm.district || !this.checkoutForm.thana || !this.checkoutForm.area || !this.checkoutForm.paymentMethod || !this.checkoutForm.transactionId) {
+            this.showAlert('ভুল তথ্য!', 'সব ফিল্ড পূরণ করুন।', 'error');
+            return;
+          }
+
+          if (Number(this.checkoutForm.paidAmount) <= 0) {
+            this.showAlert('ভুল পেমেন্ট!', 'পেমেন্টের টাকার পরিমাণ দিন।', 'error');
+            return;
+          }
+
+          const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+
+          const productTotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+          const finalTotal = this.cartGrandTotal;
+          const paidAmount = Number(this.checkoutForm.paidAmount || finalTotal);
+
+          const addressText = `${this.checkoutForm.area}, ${this.checkoutForm.thana}, ${this.checkoutForm.district}, ${this.checkoutForm.division}`;
+
+          const newOrder = {
+            id: orderId,
+            userId: this.firebaseUser ? this.firebaseUser.uid : null,
+            createdAt: Date.now(),
+            date: new Date().toLocaleDateString('en-GB'),
+            customer: {
+              name: this.checkoutForm.name,
+              phone: this.checkoutForm.phone,
+              address: addressText,
+              landmark: this.checkoutForm.area || 'N/A'
+            },
+            division: this.checkoutForm.division,
+            district: this.checkoutForm.district,
+            thana: this.checkoutForm.thana,
+            area: this.checkoutForm.area,
+            location: this.checkoutForm.division === 'dhaka' ? 'Inside Dhaka' : 'Outside Dhaka',
+            deliveryArea: addressText,
+            landmark: this.checkoutForm.area || 'N/A',
+            note: this.checkoutForm.note || '',
+            size: this.checkoutForm.size || 'N/A',
+            items: this.cart.map(item => ({
+              ...item,
+              size: item.category === 'fashion' ? (this.checkoutForm.size || 'M') : 'N/A'
+            })),
+            subtotal: this.cartSubtotal,
+            deliveryFee: this.deliveryFee,
+            discount: this.appliedDiscount,
+            total: finalTotal,
+            status: 'pending',
+            progress: 25,
+            paymentMethod: this.checkoutForm.paymentMethod,
+            paymentPhone: this.checkoutForm.paymentPhone,
+            paidAmount: paidAmount,
+            transactionId: this.checkoutForm.transactionId,
+            productTotal: productTotal,
+            paymentAmount: paidAmount
+          };
+
+          await window.dbSet(
+            window.dbRef(window.firebaseDb, `orders/${orderId}`),
+            newOrder
+          );
+
+          this.lastOrder = newOrder;
+          this.cart = [];
+          await this.syncCartToFirebase();
+          this.checkoutOpen = false;
+
+          this.currentView = 'account';
+
+          this.showAlert('অর্ডার সফল হয়েছে!', `আপনার অর্ডার আইডি: ${orderId}। ধন্যবাদ আমাদের সাথে কেনাকাটা করার জন্য!`, 'success');
+          this.sendWhatsAppOrder(newOrder);
+        },
+
+        sendWhatsAppOrder(order) {
+          const deliveryInfo = order.division === 'dhaka' ? 'ঢাকার ভেতরে' : 'ঢাকার বাইরে';
+          const productSummary = order.items.map(i => `${i.name} (${i.size || 'N/A'}) Qty: ${i.qty}`).join(', ');
+          const message = encodeURIComponent(
+            `Hello Integrity Store,\n\n` +
+            `Order Confirmation\n` +
+            `Order ID: ${order.id}\n` +
+            `Customer Name: ${order.customer.name}\n` +
+            `Customer Phone: ${order.customer.phone}\n` +
+            `Division: ${order.division}\n` +
+            `District: ${order.district}\n` +
+            `Thana: ${order.thana}\n` +
+            `Area: ${order.area}\n` +
+            `Size: ${order.size || 'N/A'}\n` +
+            `Delivery Location: ${deliveryInfo}\n` +
+            `Address: ${order.customer.address}\n` +
+            `Payment Method: ${order.paymentMethod}\n` +
+            `Payment Number: ${order.paymentPhone || '01602903024'}\n` +
+            `Paid Amount: ${this.formatCurrency(order.paidAmount || order.total)}\n` +
+            `Transaction ID: ${order.transactionId || 'N/A'}\n` +
+            `Product Price: ${this.formatCurrency(order.productTotal || order.subtotal || 0)}\n` +
+            `Delivery Charge: ${this.formatCurrency(order.deliveryFee || 0)}\n` +
+            `Total Payable: ${this.formatCurrency(order.total || 0)}\n` +
+            `Items: ${productSummary}\n` +
+            `Order Note: ${order.note || 'N/A'}\n` +
+            `Status: ${order.status}`
+          );
+
+          const waLink = `https://wa.me/8801602903024?text=${message}`;
+          window.open(waLink, '_blank');
+        },
+
+        printInvoice(order) {
+          this.lastOrder = order;
+          setTimeout(() => { window.print(); }, 200);
+        },
+
+        downloadOrderPNG(order) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 1200;
+          canvas.height = 1500;
+          const ctx = canvas.getContext('2d');
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = '#064e3b';
+          ctx.fillRect(0, 0, canvas.width, 120);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 48px Arial';
+          ctx.fillText('Integrity Store BD', 60, 70);
+
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 28px Arial';
+          let y = 170;
+
+          const lines = [
+            'Order ID: ' + (order.id || 'N/A'),
+            'Date: ' + (order.date || 'N/A'),
+            'Status: ' + (order.status || 'pending'),
+            'Customer: ' + (order.customer ? order.customer.name : 'N/A'),
+            'Phone: ' + (order.customer ? order.customer.phone : 'N/A'),
+            'Address: ' + (order.customer ? order.customer.address : 'N/A'),
+            'Size: ' + (order.size || 'N/A'),
+            'Payment Method: ' + (order.paymentMethod || 'N/A'),
+            'Transaction ID: ' + (order.transactionId || 'N/A'),
+            '--- ITEMS ---'
+          ];
+
+          order.items.forEach((item, i) => {
+            lines.push(
+              `${i + 1}. ${item.name || 'Item'} | Qty: ${item.qty || 1} | Size: ${item.size || 'N/A'} | Total: ${this.formatCurrency((item.price || 0) * (item.qty || 1)).replace(' ৳','')}৳`
+            );
+          });
+
+          lines.push('--- SUMMARY ---');
+          lines.push('Subtotal: ' + this.formatCurrency(order.subtotal || 0));
+          lines.push('Delivery: ' + this.formatCurrency(order.deliveryFee || 0));
+          lines.push('Discount: ' + this.formatCurrency(order.discount || 0));
+          lines.push('Grand Total: ' + this.formatCurrency(order.total || 0));
+
+          lines.forEach((line) => {
+            ctx.font = line.startsWith('---') ? 'bold 22px Arial' : '22px Arial';
+            ctx.fillStyle = line.startsWith('---') ? '#059669' : '#0f172a';
+            const maxWidth = canvas.width - 120;
+            const wrapped = this.wrapText(ctx, line, maxWidth);
+            wrapped.forEach((textChunk) => {
+              ctx.fillText(textChunk, 60, y);
+              y += 32;
+            });
+          });
+
+          const link = document.createElement('a');
+          link.download = `order-${order.id || 'detail'}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        },
+
+        wrapText(ctx, text, maxWidth) {
+          const words = text.split(' ');
+          const lines = [];
+          let currentLine = '';
+
+          for (let i = 0; i < words.length; i++) {
+            const testLine = currentLine + words[i] + ' ';
+            if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+              lines.push(currentLine.trim());
+              currentLine = words[i] + ' ';
+            } else {
+              currentLine = testLine;
+            }
+          }
+          if (currentLine.trim()) lines.push(currentLine.trim());
+          return lines;
+        },
+
+        async updateOrderStatus(orderId, newStatus) {
+          let progressVal = 25;
+          if (newStatus === 'confirmed') progressVal = 50;
+          if (newStatus === 'shipped') progressVal = 75;
+          if (newStatus === 'delivered') progressVal = 100;
+          if (newStatus === 'cancelled') progressVal = 0;
+
+          await window.dbUpdate(
+            window.dbRef(window.firebaseDb, `orders/${orderId}`),
+            { status: newStatus, progress: progressVal, updatedAt: Date.now() }
+          );
+
+          this.showAlert('স্ট্যাটাস আপডেট!', `অর্ডার আইডি ${orderId}-এর স্ট্যাটাস পরিবর্তন করা হয়েছে।`, 'success');
+        },
+
+        async deleteOrder(orderId) {
+          const result = await Swal.fire({
+            title: 'অর্ডার ডিলিট করতে চান?',
+            text: "এই তথ্যটি সিস্টেম থেকে স্থায়ীভাবে রিমুভ হয়ে যাবে!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'হ্যাঁ, রিমুভ করুন',
+            cancelButtonText: 'না'
+          });
+
+          if (!result.isConfirmed) return;
+
+          await window.dbRemove(window.dbRef(window.firebaseDb, `orders/${orderId}`));
+          this.showAlert('সফল!', 'অর্ডার রিমুভ হয়েছে।', 'success');
+        }
+      }
+    }
+  </script>
+</body>
+</html>
